@@ -31,6 +31,26 @@ jobs:
         run: |
           unzip -q TREND-CUT-AI-V2-source-for-github.zip -d source
 
+      - name: Fix JVM target
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("source/trend-cut-ai-v2-android-mvp/app/build.gradle.kts")
+          s = p.read_text()
+          marker = "    defaultConfig {"
+          config = """    compileOptions {
+              sourceCompatibility = JavaVersion.VERSION_17
+              targetCompatibility = JavaVersion.VERSION_17
+          }
+          kotlinOptions {
+              jvmTarget = "17"
+          }
+          defaultConfig {"""
+          if marker not in s:
+              raise SystemExit("defaultConfig not found")
+          p.write_text(s.replace(marker, config, 1))
+          PY
+
       - name: Build APK
         run: |
           gradle --no-daemon -p source/trend-cut-ai-v2-android-mvp :app:assembleDebug
